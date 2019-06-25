@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using RapsoApi.Model;
-using CsvHelper;
-using System.Net.Http;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace RapsoApi.Controllers
 {
@@ -21,9 +19,10 @@ namespace RapsoApi.Controllers
             return new string[] { "value1", "value2" };
         }
 
-        [HttpPost]
-        public async Task Import(int year)
+        [HttpPost("import/{year:int}")]
+        public async Task<ActionResult<string>> Import(int year)
         {
+            //var year = 2019;
             //check if already imported
 
             //download file
@@ -33,15 +32,15 @@ namespace RapsoApi.Controllers
             using(var decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
             {
                 decompressionStream.CopyTo(file);
-
             }
 
             using (var reader = new StreamReader(file))
             using (var csv = new CsvReader(reader))
             {
                 var operations = csv.GetRecords<Operation>();
-
             }
+
+            return Ok($"Fichier {year} importé");
         }
 
         public static Stream Decompress(Stream stream)
@@ -54,26 +53,5 @@ namespace RapsoApi.Controllers
 
             return result;
         }
-
-        // [HttpGet("{id}")]
-        // public ActionResult<string> Get(int id)
-        // {
-        //     return "value";
-        // }
-
-        // [HttpPost]
-        // public void Post([FromBody] string value)
-        // {
-        // }
-
-        // [HttpPut("{id}")]
-        // public void Put(int id, [FromBody] string value)
-        // {
-        // }
-
-        // [HttpDelete("{id}")]
-        // public void Delete(int id)
-        // {
-        // }
     }
 }
