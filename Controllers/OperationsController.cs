@@ -4,6 +4,7 @@ using RapsoApi.Model;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -22,25 +23,37 @@ namespace RapsoApi.Controllers
         [HttpPost("import/{year:int}")]
         public async Task<ActionResult<string>> Import(int year)
         {
-            //var year = 2019;
             //check if already imported
 
-            //download file
+            var nbImported = 0;
+
+            //Download archive
             var url = $"https://cadastre.data.gouv.fr/data/etalab-dvf/latest/csv/{year}/full.csv.gz";
             var stream = await new HttpClient().GetStreamAsync(url);
-            var file = new MemoryStream();
-            using(var decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
+
+            using (var file = new MemoryStream())
             {
-                decompressionStream.CopyTo(file);
+                //Uncompress data
+                using (var decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
+                    decompressionStream.CopyTo(file);
+
+                file.Seek(0, SeekOrigin.Begin);
+                file.Flush();
+
+                //Read CSV
+                using (var reader = new StreamReader(file))
+                using (var csv = new CsvReader(reader))
+                {
+                    foreach (var operation in csv.GetRecords<Operation>())
+                    {
+                        //Save item
+
+                        System.Diagnostics.Debug.WriteLine("Row: " + ++nbImported);
+                    }
+                }
             }
 
-            using (var reader = new StreamReader(file))
-            using (var csv = new CsvReader(reader))
-            {
-                var operations = csv.GetRecords<Operation>();
-            }
-
-            return Ok($"Fichier {year} importé");
+            return Ok($"Fichier {year} importé: {nbImported} items");
         }
 
         public static Stream Decompress(Stream stream)

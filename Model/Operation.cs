@@ -19,16 +19,16 @@ namespace RapsoApi.Model
         public string id_parcelle { get; set; }
         public string ancien_id_parcelle { get; set; }
         public string numero_volume { get; set; }
-        public string lot_1_numero { get; set; }
-        public string lot_1_surface_carrez { get; set; }
-        public string lot_2_numero { get; set; }
-        public string lot_2_surface_carrez { get; set; }
-        public string lot_3_numero { get; set; }
-        public string lot_3_surface_carrez { get; set; }
-        public string lot_4_numero { get; set; }
-        public string lot_4_surface_carrez { get; set; }
-        public string lot_5_numero { get; set; }
-        public string lot_5_surface_carrez { get; set; }
+        public string lot1_numero { get; set; }
+        public string lot1_surface_carrez { get; set; }
+        public string lot2_numero { get; set; }
+        public string lot2_surface_carrez { get; set; }
+        public string lot3_numero { get; set; }
+        public string lot3_surface_carrez { get; set; }
+        public string lot4_numero { get; set; }
+        public string lot4_surface_carrez { get; set; }
+        public string lot5_numero { get; set; }
+        public string lot5_surface_carrez { get; set; }
         public string nombre_lots { get; set; }
         public string code_type_local { get; set; }
         public string type_local { get; set; }
