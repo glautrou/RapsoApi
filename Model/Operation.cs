@@ -1,3 +1,6 @@
+using System;
+using CsvHelper.Configuration.Attributes;
+
 namespace RapsoApi.Model
 {
     public class Operation
@@ -41,5 +44,7 @@ namespace RapsoApi.Model
         public string surface_terrain { get; set; }
         public string longitude { get; set; }
         public string latitude { get; set; }
+        //[Ignore]
+        //public DateTime insertion_date { get; set; }
     }
 }
