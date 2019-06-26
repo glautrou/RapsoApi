@@ -9,6 +9,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using System.Security.Authentication;
+using System;
+using MongoDB.Bson;
+using CsvHelper.Configuration;
 
 namespace RapsoApi.Controllers
 {
@@ -54,39 +57,57 @@ namespace RapsoApi.Controllers
         [HttpPost("import/{year:int}")]
         public async Task<ActionResult<string>> Import(int year)
         {
-            //check if already imported
-            var a = GetFirstByYear("");
-
-
             var nbImported = 0;
 
-            //Download archive
-            var url = $"https://cadastre.data.gouv.fr/data/etalab-dvf/latest/csv/{year}/full.csv.gz";
-            var stream = await new HttpClient().GetStreamAsync(url);
-
-            using (var file = new MemoryStream())
+            try
             {
-                //Uncompress data
-                using (var decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
-                    decompressionStream.CopyTo(file);
+                var documents = await _operations.Find(_ => true).ToListAsync();
 
-                file.Seek(0, SeekOrigin.Begin);
-                file.Flush();
+                //check if already imported
+                var a = GetFirstByYear("");
 
-                //Read CSV
-                using (var reader = new StreamReader(file))
-                using (var csv = new CsvReader(reader))
+                //Download archive
+                var url = $"https://cadastre.data.gouv.fr/data/etalab-dvf/latest/csv/{year}/full.csv.gz";
+                var stream = await new HttpClient().GetStreamAsync(url);
+
+                using (var file = new MemoryStream())
                 {
-                    foreach (var operation in csv.GetRecords<Operation>())
+                    //Uncompress data
+                    using (var decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
+                        decompressionStream.CopyTo(file);
+
+                    file.Seek(0, SeekOrigin.Begin);
+                    file.Flush();
+
+                    //using (var fileStream = System.IO.File.Create("file.csv"))
+                    //{
+                    //    file.Seek(0, SeekOrigin.Begin);
+                    //    file.CopyTo(fileStream);
+                    //}
+                    //file.Seek(0, SeekOrigin.Begin);
+                    //file.Flush();
+
+                    //Read CSV
+                    using (var reader = new StreamReader(file))
+                    using (var csv = new CsvReader(reader))
                     {
-                        //Save item
-                        var created = Create(operation);
-                        System.Diagnostics.Debug.WriteLine("Row: " + ++nbImported);
+                        var operations = csv.GetRecords<Operation>();
+                        foreach (var operation in operations)
+                        {
+                            //Save item
+                            operation.Id = ObjectId.GenerateNewId();
+                            var created = Create(operation);
+                            System.Diagnostics.Debug.WriteLine("Row: " + ++nbImported);
+                        }
                     }
                 }
-            }
 
-            var b = GetFirstByYear("");
+                var b = GetFirstByYear("");
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
 
             return Ok($"Fichier {year} importé: {nbImported} items");
         }
