@@ -45,15 +45,6 @@ namespace RapsoApi.Controllers
             return new string[] { "value1", "value2" };
         }
 
-        public Operation GetFirstByYear(string id) =>
-            _operations.Find<Operation>(i => i.id_mutation == id).FirstOrDefault();
-
-        public Operation Create(Operation operation)
-        {
-            _operations.InsertOne(operation);
-            return operation;
-        }
-
         [HttpPost("import/{year:int}")]
         public async Task<ActionResult<string>> Import(int year)
         {
@@ -61,10 +52,14 @@ namespace RapsoApi.Controllers
 
             try
             {
-                var documents = await _operations.Find(_ => true).ToListAsync();
+                //var documents = await _operations.Find(_ => true).ToListAsync();
 
                 //check if already imported
-                var a = GetFirstByYear("");
+                var isAlreadyImported = _operations
+                    .Find(i => i.id_mutation.StartsWith(year.ToString()))
+                    .Any();
+                if (isAlreadyImported)
+                    throw new Exception($"The year {year} has already been imported.");
 
                 //Download archive
                 var url = $"https://cadastre.data.gouv.fr/data/etalab-dvf/latest/csv/{year}/full.csv.gz";
@@ -91,18 +86,18 @@ namespace RapsoApi.Controllers
                     using (var reader = new StreamReader(file))
                     using (var csv = new CsvReader(reader))
                     {
+                        csv.Configuration.Delimiter = ",";
                         var operations = csv.GetRecords<Operation>();
+
                         foreach (var operation in operations)
                         {
                             //Save item
                             operation.Id = ObjectId.GenerateNewId();
-                            var created = Create(operation);
+                            _operations.InsertOne(operation);
                             System.Diagnostics.Debug.WriteLine("Row: " + ++nbImported);
                         }
                     }
                 }
-
-                var b = GetFirstByYear("");
             }
             catch (Exception ex)
             {
@@ -110,17 +105,6 @@ namespace RapsoApi.Controllers
             }
 
             return Ok($"Fichier {year} importé: {nbImported} items");
-        }
-
-        public static Stream Decompress(Stream stream)
-        {
-            var result = new MemoryStream();
-            using (GZipStream decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
-            {
-                decompressionStream.CopyTo(result);
-            }
-
-            return result;
         }
     }
 }

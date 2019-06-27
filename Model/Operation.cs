@@ -1,4 +1,3 @@
-using System;
 using CsvHelper.Configuration.Attributes;
 using MongoDB.Bson;
 
@@ -6,6 +5,8 @@ namespace RapsoApi.Model
 {
     public class Operation
     {
+        [Ignore]
+        public ObjectId Id { get; set; }
         public string id_mutation { get; set; }
         public string date_mutation { get; set; }
         public string numero_disposition { get; set; }
@@ -45,9 +46,5 @@ namespace RapsoApi.Model
         public string surface_terrain { get; set; }
         public string longitude { get; set; }
         public string latitude { get; set; }
-        [Ignore]
-        public DateTime insertion_date { get; set; }
-        [Ignore]
-        public ObjectId Id { get; set; }
     }
 }
